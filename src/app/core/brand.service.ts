@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {Injectable, NgZone} from '@angular/core';
 import {CoreModule} from './core.module';
 import {Observable} from 'rxjs';
 import {Brand} from './brand.model';
@@ -12,6 +12,8 @@ export class BrandService {
 
   brands: Brand[] = [];
 
+  constructor(private ngZone: NgZone) {}
+
   getBrands(): Observable<Brand[]> {
     return new Observable(subscriber => {
 
@@ -19,13 +21,13 @@ export class BrandService {
       eventSource.onmessage = (event) => {
         this.brands.push(JSON.parse(event.data));
         // console.log(this.brands.length)
-        subscriber.next(this.brands);
+        this.ngZone.run(_ => subscriber.next(this.brands));
       };
       eventSource.onerror = (error) => {
         if (eventSource.readyState === 0) {
           console.log('The stream has been closed by the server.');
           eventSource.close();
-          console.log(this.brands)
+          // console.log(this.brands)
           subscriber.complete();
         } else {
           subscriber.error('EventSource error: ' + error);
